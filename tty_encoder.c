@@ -119,7 +119,8 @@ int main(int argc, char* argv[]) {
 	if(comp_id < 0) return comp_id;
 	
 	struct {
-		hal_float_t *pos;
+		hal_float_t 	*pos;
+		hal_s32_t 	*pos_s;
 		hal_bit_t 	*x_ena;
 		hal_bit_t 	*y_ena;
 		hal_bit_t 	*z_ena;
@@ -140,7 +141,9 @@ int main(int argc, char* argv[]) {
         return -1;};
         
     int r;
-	r = hal_pin_float_newf(HAL_OUT, &(tty_hal->pos), comp_id, "%s.pos", "tty_mpg");
+    r = hal_pin_float_newf(HAL_OUT, &(tty_hal->pos), comp_id, "%s.pos", "tty_mpg");
+    if (r != 0) return -1;
+    r = hal_pin_s32_newf(HAL_OUT, &(tty_hal->pos_s), comp_id, "%s.pos_s", "tty_mpg");
     if (r != 0) return -1;
     r = hal_pin_bit_newf(HAL_OUT, &(tty_hal->x_ena), comp_id, "%s.x_ena", "tty_mpg");
     if (r != 0) return -1;
@@ -216,11 +219,12 @@ int main(int argc, char* argv[]) {
 		if(error_counter > 10) *tty_hal->ready = 0; else *tty_hal->ready = 1;
 		if(*tty_hal->ready)
 		{
+			*tty_hal->pos_s = (int16_t)read_buf.CNT;
 			*tty_hal->pos = (double)(uint16_t)read_buf.CNT;
-			*tty_hal->x_ena = ~gpio_t->x_ena;
-			*tty_hal->y_ena = ~gpio_t->y_ena;
-			*tty_hal->z_ena = ~gpio_t->z_ena;
-			*tty_hal->a_ena = ~gpio_t->a_ena;
+			*tty_hal->x_ena = !gpio_t->x_ena;
+			*tty_hal->y_ena = !gpio_t->y_ena;
+			*tty_hal->z_ena = !gpio_t->z_ena;
+			*tty_hal->a_ena = !gpio_t->a_ena;
 			*tty_hal->scale_out = 0;
 			if(gpio_t->scale_0 == 0) *tty_hal->scale_out = *tty_hal->scale_in_0;
 			if(gpio_t->scale_1 == 0) *tty_hal->scale_out = *tty_hal->scale_in_1;
